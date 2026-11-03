@@ -1,0 +1,30 @@
+{
+  "label": "custodian",
+  "health_issue_title": "Deployment health",
+  "owner_mention": "@DevSecObie",
+  "recent_days": 14,
+  "max_deletions_per_run": 100,
+  "stale_pr_hours": 48,
+  "inactive_environment_days": 30,
+  "keep_branches": [],
+  "required_secrets": [],
+  "endpoints": [
+    {
+      "name": "Update server",
+      "url": "https://updates.cyberjudah.io/",
+      "critical": false
+    }
+  ],
+  "watch_workflows": [
+    {
+      "name": "CI",
+      "file": "ci.yml",
+      "branch": "main",
+      "event": "push"
+    },
+    {
+      "name": "Update server deploy (updates.cyberjudah.io)",
+      "file": "deploy-cyberjudah.yml"
+    }
+  ]
+}
