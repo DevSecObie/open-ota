@@ -11,8 +11,7 @@
   "endpoints": [
     {
       "name": "Update server",
-      "url": "https://updates.cyberjudah.io/",
-      "critical": false
+      "url": "https://updates.cyberjudah.io/health"
     }
   ],
   "watch_workflows": [
@@ -26,5 +25,12 @@
       "name": "Update server deploy (updates.cyberjudah.io)",
       "file": "deploy-cyberjudah.yml"
     }
+  ],
+  "production_only_secrets": [
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "OTA_PUBLISH_TOKEN",
+    "OTA_SIGNING_KEY",
+    "OTA_ACCESS_EMAILS"
   ]
 }

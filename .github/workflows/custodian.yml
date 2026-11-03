@@ -70,7 +70,7 @@ jobs:
 
   branches:
     if: >-
-      github.event_name == 'schedule' ||
+      (github.event_name == 'schedule' && github.event.schedule == '7 12 * * *') ||
       (github.event_name == 'workflow_dispatch' && inputs.task == 'branches')
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -95,7 +95,7 @@ jobs:
     needs: [branches]
     if: >-
       ${{ !cancelled() && (
-      github.event_name == 'schedule' ||
+      (github.event_name == 'schedule' && github.event.schedule == '7 12 * * *') ||
       (github.event_name == 'workflow_dispatch' && inputs.task == 'health') ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.event != 'pull_request')) }}
     runs-on: ubuntu-latest
@@ -114,17 +114,4 @@ jobs:
       - name: Update the Deployment health issue
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          # true/false only: the expression is evaluated by GitHub, so no value reaches the runner.
-          CUSTODIAN_SECRETS_PRESENT: |
-            {
-              "CLOUDFLARE_API_TOKEN": ${{ secrets.CLOUDFLARE_API_TOKEN != '' }},
-              "CLOUDFLARE_ACCOUNT_ID": ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }},
-              "OTA_PUBLISH_TOKEN": ${{ secrets.OTA_PUBLISH_TOKEN != '' }},
-              "OTA_SIGNING_KEY": ${{ secrets.OTA_SIGNING_KEY != '' }},
-              "OTA_ACCESS_EMAILS": ${{ secrets.OTA_ACCESS_EMAILS != '' }}
-            }
-          # Used only to ask Cloudflare, Telegram and GitHub whether each token still works and
-          # when it expires. custodian.py never prints them, nor any error text that could hold one.
-          CHECK_CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CHECK_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: python3 .github/custodian/custodian.py health
