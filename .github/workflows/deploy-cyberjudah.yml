@@ -1,0 +1,54 @@
+name: Deploy CyberJudah update server
+
+# By hand only, and only after the owner approves in the "production" environment. Deploys this
+# server to CyberJudah's Cloudflare account: updates.cyberjudah.io for the app, ota.cyberjudah.io
+# for the dashboard (behind Cloudflare Access, the owner's email only). Same steps as the README's
+# "Deploy Open OTA", with the values from repository secrets instead of a local .env.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-cyberjudah
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.repository == 'DevSecObie/open-ota'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Check the secrets are set
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OTA_PUBLISH_TOKEN: ${{ secrets.OTA_PUBLISH_TOKEN }}
+          OTA_SIGNING_KEY: ${{ secrets.OTA_SIGNING_KEY }}
+          OTA_ACCESS_EMAILS: ${{ secrets.OTA_ACCESS_EMAILS }}
+        run: |
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID OTA_PUBLISH_TOKEN OTA_SIGNING_KEY OTA_ACCESS_EMAILS; do
+            test -n "${!name}" || { echo "Add the $name repository secret first."; exit 1; }
+          done
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OTA_PUBLISH_TOKEN: ${{ secrets.OTA_PUBLISH_TOKEN }}
+          # The PEM file pasted as is; the server accepts real newlines.
+          OTA_SIGNING_KEY: ${{ secrets.OTA_SIGNING_KEY }}
+          OTA_ACCESS_EMAILS: ${{ secrets.OTA_ACCESS_EMAILS }}
+          OTA_UPDATES_DOMAIN: updates.cyberjudah.io
+          OTA_DASHBOARD_DOMAIN: ota.cyberjudah.io
+          # The deploy token cannot create other API tokens; download counts stay off.
+          OTA_DELIVERY_STATS: "off"
+        run: pnpm cloud:deploy:prod --yes
