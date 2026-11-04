@@ -31,7 +31,9 @@ export class Dashboard extends Cloudflare.Website.Vite<Dashboard>()(
             access: { policies: [{ decision: "allow" as const, include: accessInclude }] },
             dev: { access: { aud: "dev", identity: { email: "dev@example.com" } } },
           }),
-      ...(dashboardDomain === undefined ? {} : { domain: dashboardDomain }),
+      // With its own hostname, the dashboard has no workers.dev or preview URL: one door,
+      // and that door is behind Access.
+      ...(dashboardDomain === undefined ? {} : { domain: dashboardDomain, workersDev: false }),
     };
   }).pipe(Effect.orDie),
 ) {}
